@@ -11,7 +11,7 @@ void *chef_run()
 
     while (TRUE)
     {
-        if(students_queue->_length != 0){
+        if(globals_get_students() != 0){
             chef_check_food(buffets);
         }else{
             break;

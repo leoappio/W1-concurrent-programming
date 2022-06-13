@@ -16,7 +16,7 @@ int worker_gate_look_queue()
 void worker_gate_remove_student()
 {
     student_t* student = globals_get_queue()->_first;
-    while(student->_id_buffet == -1);
+    while(student->_buffet_position == -1);
     queue_remove(globals_get_queue());
 }
 
@@ -71,5 +71,5 @@ void worker_gate_finalize(worker_gate_t *self)
 void worker_gate_insert_queue_buffet(student_t *student)
 {
     buffet_t* buffets = globals_get_buffets();  
-    buffet_queue_insert(&buffets[student->_id_buffet], student);
+    while(!buffet_queue_insert(&buffets[student->_id_buffet], student));
 }
