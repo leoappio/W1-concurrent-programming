@@ -12,7 +12,7 @@ void *buffet_run(void *arg)
     /*  O buffet funciona enquanto houver alunos na fila externa. */
     while (all_students_entered == FALSE)
     {
-        if (globals_get_students == 0) 
+        if (globals_get_students() == 0) 
         {
             break;
         }
