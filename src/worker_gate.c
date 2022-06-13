@@ -3,23 +3,37 @@
 #include "worker_gate.h"
 #include "globals.h"
 #include "config.h"
+#include "queue.h"
 
 
 
-void worker_gate_look_queue()
-{
-    /* Insira aqui sua lógica */
+int worker_gate_look_queue()
+{   
+    queue_t* student_queue = globals_get_queue();
+    return student_queue->_length;
 }
 
 void worker_gate_remove_student()
 {
-    /* Insira aqui sua lógica */
+    student_t* student = globals_get_queue()->_first;
+    while(student->_id_buffet == -1);
+    queue_remove(globals_get_queue());
 }
 
 void worker_gate_look_buffet()
 {
-    /* Insira aqui sua lógica */
+    buffet_t* buffets = globals_get_buffets();
+    student_t* student = globals_get_queue()->_first;
 
+    for(int i = 0; i < len(buffets); i++){
+        if(buffets[i].queue_left[0] == 0){
+            student->left_or_right = 'L';
+            student->_id_buffet = i;
+        }else if(buffets[i].queue_right[0] == 0){
+            student->left_or_right = 'R';
+            student->_id_buffet = i;
+        }
+    }
 }
 
 void *worker_gate_run(void *arg)
@@ -32,10 +46,11 @@ void *worker_gate_run(void *arg)
 
     while (all_students_entered == FALSE)
     {
-        worker_gate_look_queue();
+        number_students = worker_gate_look_queue();
+        all_students_entered = number_students > 0 ? FALSE : TRUE;
         worker_gate_look_buffet();
         worker_gate_remove_student();
-        msleep(5000); /* Pode retirar este sleep quando implementar a solução! */
+        //msleep(5000); /* Pode retirar este sleep quando implementar a solução! */
     }
 
     pthread_exit(NULL);
@@ -55,5 +70,6 @@ void worker_gate_finalize(worker_gate_t *self)
 
 void worker_gate_insert_queue_buffet(student_t *student)
 {
-    /* Insira aqui sua lógica */
+    buffet_t* buffets = globals_get_buffets();  
+    buffet_queue_insert(&buffets[student->_id_buffet], student);
 }
