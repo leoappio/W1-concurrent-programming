@@ -3,6 +3,7 @@
 #include "config.h"
 #include "globals.h"
 
+pthread_mutex_t mutex_meal[5];
 
 void *buffet_run(void *arg)
 { 
@@ -31,6 +32,11 @@ void *buffet_run(void *arg)
 void buffet_init(buffet_t *self, int number_of_buffets)
 {
     int i = 0, j = 0;
+    
+    for(int i = 0; i < 5; i++){
+        pthread_mutex_init(&mutex_meal[i], NULL);
+    }
+
     for (i = 0; i < number_of_buffets; i++)
     {
         /*A fila possui um ID*/

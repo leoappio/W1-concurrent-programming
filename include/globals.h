@@ -35,7 +35,7 @@ extern int globals_get_students();
 
 /**
  * @brief Insere o número de mesas (de modo global)
- * 
+ * @param num_tables 
  */
 extern void globals_set_number_of_tables(int num_tables);
 
@@ -49,7 +49,7 @@ extern int globals_get_number_of_tables();
 
 /**
  * @brief Insere o número de assentos por mesa (de modo global)
- * 
+ * @param num_seats 
  */
 extern void globals_set_seats_per_table(int num_seats);
 

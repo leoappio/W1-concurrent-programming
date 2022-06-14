@@ -3,6 +3,7 @@
 #include "chef.h"
 #include "config.h"
 #include "globals.h"
+#include "buffet.c"
 
 void *chef_run()
 {
@@ -30,9 +31,11 @@ void chef_check_food(buffet_t* buffets)
 {
     for(int i = 0; i < len(buffets); i++){
         for(int j = 0; j < 5; j++){
+            pthread_mutex_lock(&mutex_meal[i]);
             if (buffets[i]._meal[j] == 0){
                 chef_put_food(buffets, i, j);
             }
+            pthread_mutex_unlock(&mutex_meal[i]);
         }
     }
 }

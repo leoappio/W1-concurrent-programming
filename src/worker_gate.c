@@ -6,7 +6,6 @@
 #include "queue.h"
 
 
-
 int worker_gate_look_queue()
 {   
     queue_t* student_queue = globals_get_queue();
