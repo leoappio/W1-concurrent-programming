@@ -2,6 +2,7 @@
 #define __chef_H__
 
 #include <pthread.h>
+#include <buffet.h>
 
 typedef struct chef
 {
@@ -36,7 +37,7 @@ extern void* chef_run();
 * 
 * @param  none
 */
-extern void chef_put_food();
+extern void chef_put_food(buffet_t* buffets, int i, int j);
 
 /**
 * @brief Chefe checa comida no buffet.

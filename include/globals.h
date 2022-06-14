@@ -48,6 +48,21 @@ extern void globals_set_number_of_tables(int num_tables);
 extern int globals_get_number_of_tables();
 
 /**
+ * @brief Insere o número de buffets (de modo global)
+ * @param num_tables 
+ */
+extern void globals_set_buffets_number(int number);
+
+/**
+ * @brief Retorna o número de buffets (de modo global)
+ * 
+ * @return int 
+ */
+
+extern int globals_get_buffets_number();
+
+
+/**
  * @brief Insere o número de assentos por mesa (de modo global)
  * @param num_seats 
  */

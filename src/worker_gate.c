@@ -1,38 +1,30 @@
 #include <stdlib.h>
-
+#include <semaphore.h>
 #include "worker_gate.h"
 #include "globals.h"
 #include "config.h"
 #include "queue.h"
 
+sem_t total_seats_semaphore;
+sem_t students_queue_semaphore;
 
-int worker_gate_look_queue()
+pthread_mutex_t seats_mutex;
+
+
+void worker_gate_look_queue()
 {   
-    queue_t* student_queue = globals_get_queue();
-    return student_queue->_length;
+    sem_wait(&students_queue_semaphore);
 }
 
 void worker_gate_remove_student()
 {
-    student_t* student = globals_get_queue()->_first;
-    while(student->_buffet_position == -1);
-    queue_remove(globals_get_queue());
+    student_t* removed_student = queue_remove(globals_get_queue());
+    worker_gate_insert_queue_buffet(removed_student);
 }
 
 void worker_gate_look_buffet()
 {
-    buffet_t* buffets = globals_get_buffets();
-    student_t* student = globals_get_queue()->_first;
-
-    for(int i = 0; i < len(buffets); i++){
-        if(buffets[i].queue_left[0] == 0){
-            student->left_or_right = 'L';
-            student->_id_buffet = i;
-        }else if(buffets[i].queue_right[0] == 0){
-            student->left_or_right = 'R';
-            student->_id_buffet = i;
-        }
-    }
+    sem_wait(&buffet_positions_semaphore);
 }
 
 void *worker_gate_run(void *arg)
@@ -43,13 +35,19 @@ void *worker_gate_run(void *arg)
     number_students = *((int *)arg);
     all_students_entered = number_students > 0 ? FALSE : TRUE;
 
+    int total_number_of_seats = globals_get_seats_per_table() * globals_get_number_of_tables();
+
+    sem_init(&total_seats_semaphore, 0 , total_number_of_seats);
+    pthread_mutex_init(&seats_mutex, NULL);
+    sem_init(&students_queue_semaphore, 0, 0);
+    sem_init(&buffet_positions_semaphore, 0, globals_get_buffets_number() * 10);
+
     while (all_students_entered == FALSE)
     {
-        number_students = worker_gate_look_queue();
-        all_students_entered = number_students > 0 ? FALSE : TRUE;
+        worker_gate_look_queue();
         worker_gate_look_buffet();
-        worker_gate_remove_student();
-        //msleep(5000); /* Pode retirar este sleep quando implementar a solução! */
+        worker_gate_remove_student();   
+        all_students_entered = number_students > 0 ? FALSE : TRUE;
     }
 
     pthread_exit(NULL);
@@ -63,12 +61,40 @@ void worker_gate_init(worker_gate_t *self)
 
 void worker_gate_finalize(worker_gate_t *self)
 {
+    pthread_mutex_destroy(&seats_mutex);
+
+    sem_destroy(&students_queue_semaphore);
+    sem_destroy(&total_seats_semaphore);
+    sem_destroy(&buffet_positions_semaphore);
+
     pthread_join(self->thread, NULL);
     free(self);
 }
 
 void worker_gate_insert_queue_buffet(student_t *student)
 {
-    buffet_t* buffets = globals_get_buffets();  
-    while(!buffet_queue_insert(&buffets[student->_id_buffet], student));
+    buffet_t* buffets = globals_get_buffets(); 
+    int number_of_buffets = globals_get_buffets_number();
+    while (TRUE) {
+        for (int i = 0; i < number_of_buffets; i++) {
+            if (buffets[i].queue_right[0] == 0) {
+                student->left_or_right = 'R';
+                student->_id_buffet = i;
+                break;
+            }
+            if (buffets[i].queue_left[0] == 0) {
+                student->left_or_right = 'L';
+                student->_id_buffet = i;
+                break;
+            }
+        }
+
+        if(student->left_or_right == 'L' || student->left_or_right == 'R'){
+            break;
+        }
+    }
+
+    buffet_queue_insert(buffets, student);
+    globals_set_students(globals_get_students() - 1);
+    pthread_mutex_unlock(&student->mutex_student);
 }

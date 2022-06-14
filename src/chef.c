@@ -3,17 +3,16 @@
 #include "chef.h"
 #include "config.h"
 #include "globals.h"
-#include "buffet.c"
+#include "buffet.h"
 
 void *chef_run()
 {
-    queue_t* students_queue = globals_get_queue();
-    buffet_t* buffets = globals_get_buffets();
-
+    //busy wait para não dar seg fault ao iniciar o chef
+    while(globals_get_buffets() == NULL);
     while (TRUE)
     {
         if(globals_get_students() != 0){
-            chef_check_food(buffets);
+            chef_check_food();
         }else{
             break;
         }
@@ -25,17 +24,23 @@ void *chef_run()
 void chef_put_food(buffet_t* buffets, int i, int j)
 {
     buffets[i]._meal[j] = 40;
+
 }
 
-void chef_check_food(buffet_t* buffets)
+void chef_check_food()
 {
-    for(int i = 0; i < len(buffets); i++){
+    buffet_t* buffets = globals_get_buffets();
+    int buffets_number = globals_get_buffets_number();
+    while(globals_get_buffets() == NULL);
+    for(int i = 0; i < buffets_number; i++){
         for(int j = 0; j < 5; j++){
-            pthread_mutex_lock(&mutex_meal[i]);
+            pthread_mutex_lock(&buffets[i].mutexes_meals_left[j]);
+            pthread_mutex_unlock(&buffets[i].mutexes_meals_right[j]);
             if (buffets[i]._meal[j] == 0){
                 chef_put_food(buffets, i, j);
             }
-            pthread_mutex_unlock(&mutex_meal[i]);
+            pthread_mutex_unlock(&buffets[i].mutexes_meals_left[j]);
+            pthread_mutex_unlock(&buffets[i].mutexes_meals_right[j]);
         }
     }
 }

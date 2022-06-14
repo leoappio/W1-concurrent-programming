@@ -8,6 +8,7 @@ buffet_t *buffets_ref = NULL;
 int students_number = 0;
 int number_of_tables = 0;
 int seats_per_table = 0;
+int buffets_number = 0;
 
 void globals_set_queue(queue_t *queue)
 {
@@ -27,6 +28,16 @@ void globals_set_table(table_t *t)
 table_t *globals_get_table()
 {
     return table;
+}
+
+void globals_set_buffets_number(int number)
+{
+    buffets_number = number;
+}
+
+int globals_get_buffets_number()
+{
+    return buffets_number;
 }
 
 

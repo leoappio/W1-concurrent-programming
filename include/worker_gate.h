@@ -3,6 +3,7 @@
 
 #include <pthread.h>
 #include "student.h"
+#include "semaphore.h"
 
 typedef struct worker_gate
 {
@@ -11,6 +12,8 @@ typedef struct worker_gate
 
 } worker_gate_t;
 
+extern sem_t students_queue_semaphore;
+extern sem_t total_seats_semaphore;
 
 /**
  * @brief Inicia o funcionário que fica na catraca.

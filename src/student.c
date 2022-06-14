@@ -15,32 +15,57 @@ void* student_run(void *arg)
     student_t *self = (student_t*) arg;
     table_t *tables  = globals_get_table();
 
-    worker_gate_insert_queue_buffet(self);
+    queue_t *students = globals_get_queue();
+    queue_insert(students, self);
+
+    sem_post(&students_queue_semaphore);
+
+    pthread_mutex_init(&self->mutex_student, NULL);
+    pthread_mutex_lock(&self->mutex_student);
     student_serve(self);
     student_seat(self, tables);
     student_leave(self, tables);
+    pthread_mutex_destroy(&self->mutex_student);
 
     pthread_exit(NULL);
 };
 
 void student_seat(student_t *self, table_t *table)
 {
+    sem_wait(&total_seats_semaphore);
+    int tables_number = globals_get_number_of_tables();
+    table_t* tables = globals_get_table();
+    for (int i = 0; i < tables_number; i++) {
+        if (tables[i]._empty_seats > 0) {
+            tables[i]._empty_seats--;
+            break;
+        }
+    }
 }
 
 void student_serve(student_t *self)
 {
     buffet_t *buffets = globals_get_buffets();
-    for(int i = 0; i < 5; i++){
+    while(self->_buffet_position != -1){
         if (self->_wishes[self->_buffet_position]){
             buffets[self->_id_buffet]._meal[self->_buffet_position]--;
-            buffet_next_step(&buffets[self->_id_buffet], self);
         }
+        buffet_next_step(&buffets[self->_id_buffet], self);        
     }
 }
 
 void student_leave(student_t *self, table_t *table)
 {
-    /* Insira sua lógica aqui */
+    int tables_number = globals_get_number_of_tables();
+    int seats_per_table = globals_get_seats_per_table();
+    table_t* tables = globals_get_table();
+    for (int i = 0; i < tables_number; i++) {
+        if (tables[i]._empty_seats < seats_per_table) {
+            tables[i]._empty_seats++;
+            break;
+        }
+    }
+    sem_post(&total_seats_semaphore);
 }
 
 /* --------------------------------------------------------- */
