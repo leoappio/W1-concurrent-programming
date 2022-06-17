@@ -45,9 +45,12 @@ void student_seat(student_t *self, table_t *table)
 
 void student_serve(student_t *self)
 {
+    //printf("%d", self->_id);
+    //fflush(stdout);
     buffet_t *buffets = globals_get_buffets();
     while(self->_buffet_position != -1){
         if (self->_wishes[self->_buffet_position]){
+            msleep(1000);
             buffets[self->_id_buffet]._meal[self->_buffet_position]--;
         }
         buffet_next_step(&buffets[self->_id_buffet], self);        

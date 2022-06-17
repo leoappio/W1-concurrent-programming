@@ -18,8 +18,9 @@ void *buffet_run(void *arg)
         {
             break;
         }
+        //msleep(100);
         _log_buffet(self);
-        msleep(500);
+        msleep(50);
     }
 
     for(int k = 0; k < 5; k++){
