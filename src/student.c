@@ -23,7 +23,6 @@ void* student_run(void *arg)
     student_seat(self, tables);
     student_leave(self, tables);
     sem_destroy(&self->sem_student);
-
     pthread_exit(NULL);
 };
 
@@ -38,18 +37,17 @@ void student_seat(student_t *self, table_t *table)
             break;
         }
     }
-    msleep(500);
 }
 
 void student_serve(student_t *self)
 {
-    buffet_t *buffets = globals_get_buffets();
+    buffet_t *all_buffets = globals_get_buffets();
     while(self->_buffet_position != -1){
         if (self->_wishes[self->_buffet_position]){
-            msleep(100);
-            buffets[self->_id_buffet]._meal[self->_buffet_position]--;
+            msleep(50);
+            all_buffets[self->_id_buffet]._meal[self->_buffet_position]--;
         }
-        buffet_next_step(buffets, self);        
+        buffet_next_step(all_buffets, self);        
     }
 }
 

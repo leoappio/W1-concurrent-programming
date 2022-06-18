@@ -9,15 +9,10 @@ void *chef_run()
 {
     //busy wait para não dar seg fault ao iniciar o chef
     while(globals_get_buffets() == NULL);
-    while (TRUE)
+    while (globals_get_students())
     {
-        if(globals_get_students() != 0){
-            chef_check_food();
-        }else{
-            break;
-        }
+        chef_check_food();
     }
-    
     pthread_exit(NULL);
 }
 

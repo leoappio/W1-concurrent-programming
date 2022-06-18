@@ -9,21 +9,18 @@ sem_t buffet_positions_semaphore;
 
 void *buffet_run(void *arg)
 { 
-    int all_students_entered = FALSE;
+    //int all_students_entered = FALSE;
     buffet_t *self = (buffet_t*) arg;
     
     /*  O buffet funciona enquanto houver alunos na fila externa. */
-    while (all_students_entered == FALSE)
+    while (TRUE)
     {
-        //printf("%d",globals_get_students());
-        if (globals_get_students() == 0) 
-        {
-            break;
-        }
         _log_buffet(self);
         msleep(100);
-    }
 
+        if(globals_get_students() == 0)break;
+    }
+    
     for(int k = 0; k < 5; k++){
         pthread_mutex_destroy(&self->mutexes_meals_left[k]);
         pthread_mutex_destroy(&self->mutexes_meals_right[k]);
@@ -69,6 +66,7 @@ int buffet_queue_insert(buffet_t *self, student_t *student)
     if (student->left_or_right == 'L') 
     {
         pthread_mutex_lock(&self[student->_id_buffet].mutexes_meals_left[0]);
+        globals_set_students(globals_get_students() - 1);
         self[student->_id_buffet].queue_left[0] = student->_id;
         student->_buffet_position = 0;
         return TRUE;
@@ -76,6 +74,7 @@ int buffet_queue_insert(buffet_t *self, student_t *student)
     else
     { 
         pthread_mutex_lock(&self[student->_id_buffet].mutexes_meals_right[0]);
+        globals_set_students(globals_get_students() - 1);
         /* Verifica se a primeira posição está vaga */
         self[student->_id_buffet].queue_right[0] = student->_id;
         student->_buffet_position = 0;
@@ -86,9 +85,11 @@ int buffet_queue_insert(buffet_t *self, student_t *student)
 void student_exit_buffet(buffet_t *self, student_t *student){
     if (student->left_or_right == 'R') {
         self[student->_id_buffet].queue_right[4] = 0;
+        student->_buffet_position = -1;
         pthread_mutex_unlock(&self[student->_id_buffet].mutexes_meals_right[4]);
     } else {        
         self[student->_id_buffet].queue_left[4] = 0;
+        student->_buffet_position = -1;
         pthread_mutex_unlock(&self[student->_id_buffet].mutexes_meals_left[4]);
     }
     sem_post(&buffet_positions_semaphore);
@@ -133,7 +134,6 @@ void buffet_finalize(buffet_t *self, int number_of_buffets)
     {
         pthread_join(self[i].thread, NULL);
     }
-    
     /*Libera a memória.*/
     free(self);
 }

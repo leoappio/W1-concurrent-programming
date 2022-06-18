@@ -14,7 +14,7 @@
 config_t parse (int argc, char **argv)
 {
     int c;
-    config_t config = { 50, 2, 10, 5 };
+    config_t config = { 100, 2, 10, 5 };
 
     while ((c = getopt(argc, argv, "n:b:t:s:h")) != -1) {
         switch (c) {
@@ -121,6 +121,7 @@ int main (int argc, char **argv)
     
     /*Finaliza o(s) buffet(s)*/
     buffet_finalize(buffets, config.buffets);
+
 
     /* Finaliza a catraca */
     worker_gate_finalize(worker_gate);
