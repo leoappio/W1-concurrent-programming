@@ -14,18 +14,15 @@ void* student_run(void *arg)
 {
     student_t *self = (student_t*) arg;
     table_t *tables  = globals_get_table();
-
     queue_t *students = globals_get_queue();
+    sem_init(&self->sem_student, 0, 0);
     queue_insert(students, self);
-
     sem_post(&students_queue_semaphore);
-
-    pthread_mutex_init(&self->mutex_student, NULL);
-    pthread_mutex_lock(&self->mutex_student);
+    sem_wait(&self->sem_student);
     student_serve(self);
     student_seat(self, tables);
     student_leave(self, tables);
-    pthread_mutex_destroy(&self->mutex_student);
+    sem_destroy(&self->sem_student);
 
     pthread_exit(NULL);
 };
@@ -41,19 +38,18 @@ void student_seat(student_t *self, table_t *table)
             break;
         }
     }
+    msleep(500);
 }
 
 void student_serve(student_t *self)
 {
-    //printf("%d", self->_id);
-    //fflush(stdout);
     buffet_t *buffets = globals_get_buffets();
     while(self->_buffet_position != -1){
         if (self->_wishes[self->_buffet_position]){
-            msleep(1000);
+            msleep(100);
             buffets[self->_id_buffet]._meal[self->_buffet_position]--;
         }
-        buffet_next_step(&buffets[self->_id_buffet], self);        
+        buffet_next_step(buffets, self);        
     }
 }
 

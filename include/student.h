@@ -3,6 +3,7 @@
 
 #include <pthread.h>
 #include "table.h"
+#include "semaphore.h"
 
 typedef struct student
 {
@@ -11,7 +12,7 @@ typedef struct student
     int _buffet_position;                   /* Posição na fila do buffet*/
     int _id_buffet;                         /* Qual buffet o estudante está alocado?*/
     char left_or_right;
-    pthread_mutex_t mutex_student;                     /* Fila da esquerda(L) ou da direita(R)*/
+    sem_t sem_student;                     /* Fila da esquerda(L) ou da direita(R)*/
     pthread_t thread;                       /* A thread */
 } student_t;
 

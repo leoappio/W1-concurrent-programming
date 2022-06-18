@@ -3,6 +3,7 @@
 #include "buffet.h"
 #include "config.h"
 #include "globals.h"
+#include "worker_gate.h"
 
 sem_t buffet_positions_semaphore;
 
@@ -14,13 +15,13 @@ void *buffet_run(void *arg)
     /*  O buffet funciona enquanto houver alunos na fila externa. */
     while (all_students_entered == FALSE)
     {
+        //printf("%d",globals_get_students());
         if (globals_get_students() == 0) 
         {
             break;
         }
-        //msleep(100);
         _log_buffet(self);
-        msleep(50);
+        msleep(100);
     }
 
     for(int k = 0; k < 5; k++){
@@ -67,27 +68,18 @@ int buffet_queue_insert(buffet_t *self, student_t *student)
     /* Se o estudante vai para a fila esquerda */
     if (student->left_or_right == 'L') 
     {
-        /* Verifica se a primeira posição está vaga */
-        if (!self[student->_id_buffet].queue_left[0])
-        {
-            pthread_mutex_lock(&self[student->_id_buffet].mutexes_meals_left[0]);
-            self[student->_id_buffet].queue_left[0] = student->_id;
-            student->_buffet_position = 0;
-            return TRUE;
-        }
-        return FALSE;
+        pthread_mutex_lock(&self[student->_id_buffet].mutexes_meals_left[0]);
+        self[student->_id_buffet].queue_left[0] = student->_id;
+        student->_buffet_position = 0;
+        return TRUE;
     }
     else
-    {   /* Se o estudante vai para a fila direita */
-        if (!self[student->_id_buffet].queue_right[0])
-        {
-            pthread_mutex_lock(&self[student->_id_buffet].mutexes_meals_right[0]);
-            /* Verifica se a primeira posição está vaga */
-            self[student->_id_buffet].queue_right[0] = student->_id;
-            student->_buffet_position = 0;
-            return TRUE;
-        }
-        return FALSE;
+    { 
+        pthread_mutex_lock(&self[student->_id_buffet].mutexes_meals_right[0]);
+        /* Verifica se a primeira posição está vaga */
+        self[student->_id_buffet].queue_right[0] = student->_id;
+        student->_buffet_position = 0;
+        return TRUE;  /* Se o estudante vai para a fila direita */
     }
 }
 
@@ -95,7 +87,7 @@ void student_exit_buffet(buffet_t *self, student_t *student){
     if (student->left_or_right == 'R') {
         self[student->_id_buffet].queue_right[4] = 0;
         pthread_mutex_unlock(&self[student->_id_buffet].mutexes_meals_right[4]);
-    } else {         
+    } else {        
         self[student->_id_buffet].queue_left[4] = 0;
         pthread_mutex_unlock(&self[student->_id_buffet].mutexes_meals_left[4]);
     }
@@ -110,18 +102,19 @@ void buffet_next_step(buffet_t *self, student_t *student)
         if (student->left_or_right == 'L')
         {   /* Caminha para a posição seguinte da fila do buffet.*/
             int position = student->_buffet_position;
-            pthread_mutex_lock(&self[student->_id_buffet].mutexes_meals_left[student->_buffet_position+1]);
+            pthread_mutex_lock(&self[student->_id_buffet].mutexes_meals_left[position+1]);
+
             self[student->_id_buffet].queue_left[position] = 0;
             self[student->_id_buffet].queue_left[position + 1] = student->_id;
-            pthread_mutex_unlock(&self[student->_id_buffet].mutexes_meals_left[student->_buffet_position]);
+            pthread_mutex_unlock(&self[student->_id_buffet].mutexes_meals_left[position]);
             student->_buffet_position = student->_buffet_position + 1;
         }else /* Está na fila direita? */
         {   /* Caminha para a posição seguinte da fila do buffet.*/
             int position = student->_buffet_position;
-            pthread_mutex_lock(&self[student->_id_buffet].mutexes_meals_right[student->_buffet_position+1]);
+            pthread_mutex_lock(&self[student->_id_buffet].mutexes_meals_right[position+1]);
             self[student->_id_buffet].queue_right[position] = 0;
             self[student->_id_buffet].queue_right[position + 1] = student->_id;
-            pthread_mutex_unlock(&self[student->_id_buffet].mutexes_meals_right[student->_buffet_position]);
+            pthread_mutex_unlock(&self[student->_id_buffet].mutexes_meals_right[position]);
             student->_buffet_position = student->_buffet_position + 1;
         }
     }else{

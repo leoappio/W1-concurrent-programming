@@ -29,12 +29,6 @@ void worker_gate_look_buffet()
 
 void *worker_gate_run(void *arg)
 {
-    int all_students_entered;
-    int number_students;
-
-    number_students = *((int *)arg);
-    all_students_entered = number_students > 0 ? FALSE : TRUE;
-
     int total_number_of_seats = globals_get_seats_per_table() * globals_get_number_of_tables();
 
     sem_init(&total_seats_semaphore, 0 , total_number_of_seats);
@@ -42,12 +36,11 @@ void *worker_gate_run(void *arg)
     sem_init(&students_queue_semaphore, 0, 0);
     sem_init(&buffet_positions_semaphore, 0, globals_get_buffets_number() * 10);
 
-    while (all_students_entered == FALSE)
+    while (globals_get_students() != 0)
     {
         worker_gate_look_queue();
         worker_gate_look_buffet();
-        worker_gate_remove_student();   
-        all_students_entered = number_students > 0 ? FALSE : TRUE;
+        worker_gate_remove_student();
     }
 
     pthread_exit(NULL);
@@ -96,5 +89,5 @@ void worker_gate_insert_queue_buffet(student_t *student)
 
     buffet_queue_insert(buffets, student);
     globals_set_students(globals_get_students() - 1);
-    pthread_mutex_unlock(&student->mutex_student);
+    sem_post(&student->sem_student);
 }
