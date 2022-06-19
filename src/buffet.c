@@ -5,7 +5,7 @@
 #include "globals.h"
 #include "worker_gate.h"
 
-sem_t buffet_positions_semaphore;
+sem_t buffet_positions_semaphore; //Semáfaro de cada posição do buffet.
 
 void *buffet_run(void *arg)
 { 
@@ -21,6 +21,7 @@ void *buffet_run(void *arg)
         if(globals_get_students() == 0)break;
     }
     
+    //Destruição do mutex de cada opção disponível no buffet, tanto na esquerda quanto na direita.
     for(int k = 0; k < 5; k++){
         pthread_mutex_destroy(&self->mutexes_meals_left[k]);
         pthread_mutex_destroy(&self->mutexes_meals_right[k]);
@@ -63,9 +64,11 @@ void buffet_init(buffet_t *self, int number_of_buffets)
 int buffet_queue_insert(buffet_t *self, student_t *student)
 {
     /* Se o estudante vai para a fila esquerda */
+    //O mutex bloqueia a primeira posição do buffet do lado que o estudante entrar.
+    //A cada estudante que entra, há um decremento no valor da variável global dos estudantes.
     if (student->left_or_right == 'L') 
     {
-        pthread_mutex_lock(&self[student->_id_buffet].mutexes_meals_left[0]);
+        pthread_mutex_lock(&self[student->_id_buffet].mutexes_meals_left[0]); 
         globals_set_students(globals_get_students() - 1);
         self[student->_id_buffet].queue_left[0] = student->_id;
         student->_buffet_position = 0;
@@ -82,6 +85,10 @@ int buffet_queue_insert(buffet_t *self, student_t *student)
     }
 }
 
+//Quando o estudante sai do buffet, a última posição do buffet é liberada
+//ao definir o array da fila como 0. E a posição do estudante no buffet
+//se torna -1, já que ele não está mais no buffet. Assim, o mutex é destravado
+//e há um incremento no semáfaro da posição do buffet.
 void student_exit_buffet(buffet_t *self, student_t *student){
     if (student->left_or_right == 'R') {
         self[student->_id_buffet].queue_right[4] = 0;

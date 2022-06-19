@@ -14,7 +14,7 @@ typedef struct buffet
 
     int queue_left[5];
     int queue_right[5];
-    pthread_mutex_t mutexes_meals_left[5];
+    pthread_mutex_t mutexes_meals_left[5]; //Mutexes para os dois lados das posições do buffet.
     pthread_mutex_t mutexes_meals_right[5];
     pthread_t thread; /* Thread do buffet   */
 } buffet_t;

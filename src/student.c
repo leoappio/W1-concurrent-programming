@@ -10,6 +10,10 @@
 #include "globals.h"
 #include "table.h"
 
+//Inicia-se o semáfaro do estudante, que é liberado quando o worker gate o deixa
+//entrar no RU. O estudante é inserido na fila e há um incremento no semáfaro da fila.
+//O estudante se serve, realiza sua refeição e vai embora. Quando ele sai,
+//o seu semáfaro é destruído.
 void* student_run(void *arg)
 {
     student_t *self = (student_t*) arg;
@@ -26,6 +30,10 @@ void* student_run(void *arg)
     pthread_exit(NULL);
 };
 
+//Há um semáfaro do total de lugares nas mesas do RU. Este semáfaro é
+//decrementado quando um estudante se senta. Percorre-se as mesas até
+//achar uma com lugares disponíveis. Quando isto é achado, a variável
+//_empty_seats ligada àquela mesa é decrementada.
 void student_seat(student_t *self, table_t *table)
 {
     sem_wait(&total_seats_semaphore);
@@ -39,6 +47,10 @@ void student_seat(student_t *self, table_t *table)
     }
 }
 
+//Enquanto o estudante estiver se servindo no buffet (_buffet_position != -1), caso
+//o estudante queira aquela opção do buffet, há um decremento da quantidade disponível daquela opção.
+//E a função buffet_next_step() é chamada. O msleep é referente ao tempo que o estudante demora
+//se servir, para sincronização.
 void student_serve(student_t *self)
 {
     buffet_t *all_buffets = globals_get_buffets();
@@ -51,6 +63,10 @@ void student_serve(student_t *self)
     }
 }
 
+//Quando o estudante vai embora do RU, percorre-se as mesas do RU.
+//Ao achar uma mesa que não está vazia, incrementa-se a variável
+//_empty_seats. E há, também, um incremento do semáfaro referente
+//ao total de lugares nas mesas do RU.
 void student_leave(student_t *self, table_t *table)
 {
     int tables_number = globals_get_number_of_tables();

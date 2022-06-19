@@ -9,19 +9,24 @@ void *chef_run()
 {
     //busy wait para não dar seg fault ao iniciar o chef
     while(globals_get_buffets() == NULL);
-    while (globals_get_students())
+    while (globals_get_students()) //Enquanto houver estudantes, o chef checará a comida.
     {
         chef_check_food();
     }
     pthread_exit(NULL);
 }
 
+//Coloca a comida nos buffets, ao atribuir 40 para o valor da opção do buffet no array do buffet.
 void chef_put_food(buffet_t* buffets, int i, int j)
 {
     buffets[i]._meal[j] = 40;
 
 }
 
+//Caso falte comida nos buffets, percorrer-se-á o buffet e suas posições,
+//colocando a comida nelas. Para isso, faz-se uso de dois mutex, um para
+//cada lado do buffet, que impede que um estudante acesse as posições do
+//buffet enquanto o chef reabastece o buffet.
 void chef_check_food()
 {
     buffet_t* buffets = globals_get_buffets();
