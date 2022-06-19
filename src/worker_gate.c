@@ -8,8 +8,6 @@
 sem_t total_seats_semaphore; //semáfaro do total de lugares nas mesas do RU.
 sem_t students_queue_semaphore; //semáfaro dos estudantes na fila do RU.
 
-pthread_mutex_t seats_mutex; //
-
 //Quando o worker_gate olha para a fila, há um decremento no semáfaro
 // dos estudantes na fila do RU, pois ele permite o estudante entrar no RU.
 void worker_gate_look_queue()
@@ -54,23 +52,21 @@ void *worker_gate_run(void *arg)
 }
 
 //Ao inicializar o worker_gate, calcula-se o número de lugares nas mesas do RU.
-//Depois, inicia-se o semáfaro e o mutex dos lugares do RU, o semáfaro da fila de fora do RU,
+//Depois, inicia-se o semáfaro dos lugares do RU, o semáfaro da fila de fora do RU,
 //e o das posições do buffet. E, assim, cria-se a thread do worker_gate.
 void worker_gate_init(worker_gate_t *self)
 {
     int total_number_of_seats = globals_get_seats_per_table() * globals_get_number_of_tables();
     sem_init(&total_seats_semaphore, 0 , total_number_of_seats);
-    pthread_mutex_init(&seats_mutex, NULL);
     sem_init(&students_queue_semaphore, 0, 0);
     sem_init(&buffet_positions_semaphore, 0, globals_get_buffets_number() * 10);
     int number_students = globals_get_students();
     pthread_create(&self->thread, NULL, worker_gate_run, &number_students);
 }
 
-//Destrói os semáfaros e o mutex, realiza um join das threads e libera a memória.
+//Destrói os semáfaros, realiza um join das threads e libera a memória.
 void worker_gate_finalize(worker_gate_t *self)
 {
-    pthread_mutex_destroy(&seats_mutex);
 
     sem_destroy(&students_queue_semaphore);
     sem_destroy(&total_seats_semaphore);
